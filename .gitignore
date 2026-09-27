@@ -1,0 +1,16 @@
+# Python
+.venv/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+dist/
+
+# Local configuration and secrets; reflexes.example.json is the template
+reflexes.json
+*.token
+token
+.env
+
+# Local tool settings
+.claude/settings.local.json
+.DS_Store

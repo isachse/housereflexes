@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 620" role="img" aria-label="housereflex architecture: housereflex reads live values from housevitals and requests time-limited overrides through its control API; housevitals is the only Modbus client and writes, verifies and restores the setpoint." font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#52514e"/>
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2a78d6"/>
+    </marker>
+    <marker id="arrow-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#d9730d"/>
+    </marker>
+  </defs>
+
+  <rect width="1280" height="620" fill="#fcfcfb"/>
+
+  <text x="30" y="40" font-size="20" font-weight="bold" fill="#0b0b0b">housereflex · architecture</text>
+  <text x="30" y="64" font-size="13" fill="#52514e">Decides when to act; housevitals carries it out. housereflex never opens a Modbus connection.</text>
+
+  <!-- housereflex process -->
+  <rect x="30" y="95" width="380" height="300" rx="10" fill="none" stroke="#d9730d" stroke-dasharray="6 5"/>
+  <text x="46" y="118" font-size="12" font-weight="bold" fill="#52514e">HOUSEREFLEX · OWN PROCESS (launchd)</text>
+  <rect x="60" y="140" width="320" height="60" rx="6" fill="#ffffff" stroke="#52514e"/>
+  <text x="220" y="165" text-anchor="middle" font-size="13" font-weight="bold" fill="#0b0b0b">Runner · every 60 s</text>
+  <text x="220" y="183" text-anchor="middle" font-size="11" fill="#52514e">observe → step each reflex → act</text>
+  <rect x="60" y="235" width="320" height="66" rx="6" fill="#ffffff" stroke="#d9730d" stroke-width="2"/>
+  <text x="220" y="259" text-anchor="middle" font-size="13" font-weight="bold" fill="#0b0b0b">Reflex dhw_pv_boost</text>
+  <text x="220" y="277" text-anchor="middle" font-size="11" fill="#52514e">pv_surplus_boost · pure state machine</text>
+  <text x="220" y="292" text-anchor="middle" font-size="11" fill="#52514e">dry run by default</text>
+  <line x1="220" y1="200" x2="220" y2="233" stroke="#52514e" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="60" y="325" width="320" height="50" rx="6" fill="#ffffff" stroke="#8a8984"/>
+  <text x="220" y="346" text-anchor="middle" font-size="13" font-weight="bold" fill="#0b0b0b">State file</text>
+  <text x="220" y="363" text-anchor="middle" font-size="11" fill="#52514e">boosts per day, survives restarts</text>
+
+  <!-- housevitals service -->
+  <rect x="470" y="95" width="430" height="300" rx="10" fill="none" stroke="#8a8984" stroke-dasharray="6 5"/>
+  <text x="486" y="118" font-size="12" font-weight="bold" fill="#52514e">HOUSEVITALS SERVICE · :8080</text>
+  <rect x="500" y="140" width="170" height="60" rx="6" fill="#ffffff" stroke="#52514e"/>
+  <text x="585" y="165" text-anchor="middle" font-size="13" font-weight="bold" fill="#0b0b0b">REST values</text>
+  <text x="585" y="183" text-anchor="middle" font-size="11" fill="#52514e">GET · from the cache</text>
+  <rect x="700" y="140" width="170" height="60" rx="6" fill="#ffffff" stroke="#52514e"/>
+  <text x="785" y="165" text-anchor="middle" font-size="13" font-weight="bold" fill="#0b0b0b">Hub · cache</text>
+  <text x="785" y="183" text-anchor="middle" font-size="11" fill="#52514e">poller, fresh values</text>
+  <line x1="698" y1="170" x2="672" y2="170" stroke="#52514e" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="500" y="235" width="170" height="66" rx="6" fill="#ffffff" stroke="#d9730d" stroke-width="2"/>
+  <text x="585" y="259" text-anchor="middle" font-size="13" font-weight="bold" fill="#0b0b0b">Control API</text>
+  <text x="585" y="277" text-anchor="middle" font-size="11" fill="#52514e">PUT / DELETE override</text>
+  <text x="585" y="292" text-anchor="middle" font-size="11" fill="#52514e">bearer token</text>
+  <rect x="700" y="235" width="150" height="66" rx="6" fill="#ffffff" stroke="#d9730d" stroke-width="2"/>
+  <text x="775" y="259" text-anchor="middle" font-size="13" font-weight="bold" fill="#0b0b0b">Overrides</text>
+  <text x="775" y="277" text-anchor="middle" font-size="11" fill="#52514e">allow-list · leases</text>
+  <text x="775" y="292" text-anchor="middle" font-size="11" fill="#52514e">restore · write budget</text>
+  <line x1="672" y1="268" x2="698" y2="268" stroke="#d9730d" stroke-width="2" marker-end="url(#arrow-orange)"/>
+  <rect x="500" y="325" width="370" height="50" rx="6" fill="#ffffff" stroke="#2a78d6" stroke-width="2"/>
+  <text x="685" y="346" text-anchor="middle" font-size="13" font-weight="bold" fill="#0b0b0b">Modbus client</text>
+  <text x="685" y="363" text-anchor="middle" font-size="11" fill="#52514e">one serialized connection per device</text>
+  <line x1="775" y1="301" x2="775" y2="323" stroke="#d9730d" stroke-width="2" marker-end="url(#arrow-orange)"/>
+  <line x1="862" y1="323" x2="862" y2="202" stroke="#2a78d6" stroke-width="2" marker-end="url(#arrow-blue)"/>
+
+  <!-- housereflex -> housevitals -->
+  <line x1="380" y1="170" x2="498" y2="170" stroke="#52514e" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="440" y="162" text-anchor="middle" font-size="10" fill="#52514e">reads</text>
+  <line x1="380" y1="268" x2="498" y2="268" stroke="#d9730d" stroke-width="2" marker-end="url(#arrow-orange)"/>
+  <text x="440" y="260" text-anchor="middle" font-size="10" fill="#d9730d">requests</text>
+
+  <!-- appliances -->
+  <text x="980" y="130" font-size="12" font-weight="bold" fill="#52514e">APPLIANCES · LAN</text>
+  <g font-size="13" fill="#0b0b0b">
+    <rect x="980" y="140" width="180" height="56" rx="6" fill="#ffffff" stroke="#8a8984"/>
+    <text x="1070" y="164" text-anchor="middle" font-weight="bold">Heat pump 1</text>
+    <text x="1070" y="182" text-anchor="middle" font-size="11" fill="#52514e">read only</text>
+    <rect x="980" y="225" width="180" height="56" rx="6" fill="#ffffff" stroke="#d9730d" stroke-width="2"/>
+    <text x="1070" y="249" text-anchor="middle" font-weight="bold">Heat pump 2</text>
+    <text x="1070" y="267" text-anchor="middle" font-size="11" fill="#52514e">hot-water setpoint overridden</text>
+    <rect x="980" y="310" width="180" height="56" rx="6" fill="#ffffff" stroke="#8a8984"/>
+    <text x="1070" y="334" text-anchor="middle" font-weight="bold">Inverter + battery</text>
+    <text x="1070" y="352" text-anchor="middle" font-size="11" fill="#52514e">SOC, grid power</text>
+  </g>
+  <g stroke="#2a78d6" stroke-width="2" fill="none" marker-end="url(#arrow-blue)">
+    <line x1="870" y1="335" x2="978" y2="175"/>
+    <line x1="870" y1="345" x2="978" y2="258"/>
+    <line x1="870" y1="355" x2="978" y2="338"/>
+  </g>
+  <text x="980" y="390" font-size="11" fill="#2a78d6">Modbus TCP · only housevitals</text>
+
+  <!-- state machine -->
+  <text x="30" y="438" font-size="12" font-weight="bold" fill="#52514e">REFLEX pv_surplus_boost · STATE MACHINE (example values)</text>
+  <g font-size="13" fill="#0b0b0b">
+    <rect x="60" y="455" width="220" height="56" rx="6" fill="#ffffff" stroke="#52514e"/>
+    <text x="170" y="479" text-anchor="middle" font-weight="bold">idle</text>
+    <text x="170" y="497" text-anchor="middle" font-size="11" fill="#52514e">outside 10–16 h or no surplus</text>
+    <rect x="340" y="455" width="220" height="56" rx="6" fill="#ffffff" stroke="#52514e"/>
+    <text x="450" y="479" text-anchor="middle" font-weight="bold">armed</text>
+    <text x="450" y="497" text-anchor="middle" font-size="11" fill="#52514e">SOC ≥ 90 %, export ≥ 2.5 kW</text>
+    <rect x="620" y="455" width="220" height="56" rx="6" fill="#ffffff" stroke="#d9730d" stroke-width="2"/>
+    <text x="730" y="479" text-anchor="middle" font-weight="bold">boosting</text>
+    <text x="730" y="497" text-anchor="middle" font-size="11" fill="#52514e">override 50 °C until 16:00</text>
+    <rect x="900" y="455" width="220" height="56" rx="6" fill="#ffffff" stroke="#52514e"/>
+    <text x="1010" y="479" text-anchor="middle" font-weight="bold">done</text>
+    <text x="1010" y="497" text-anchor="middle" font-size="11" fill="#52514e">until tomorrow</text>
+  </g>
+  <line x1="280" y1="483" x2="338" y2="483" stroke="#52514e" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="560" y1="483" x2="618" y2="483" stroke="#d9730d" stroke-width="2" marker-end="url(#arrow-orange)"/>
+  <text x="589" y="475" text-anchor="middle" font-size="10" fill="#d9730d">10 min</text>
+  <line x1="840" y1="483" x2="898" y2="483" stroke="#52514e" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="869" y="475" text-anchor="middle" font-size="10" fill="#52514e">≥ 49 °C</text>
+  <polyline points="730,511 730,540 170,540 170,513" fill="none" stroke="#52514e" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+  <text x="450" y="556" text-anchor="middle" font-size="10" fill="#52514e">import &gt; 1 kW for 5 min → DELETE override (surplus lost while armed: back to idle as well)</text>
+
+  <text x="30" y="600" font-size="12" fill="#52514e">Blue: the only path to the devices. Orange: the write path. If housereflex stops, housevitals still ends the override at its end time and restores the previous value.</text>
+</svg>
