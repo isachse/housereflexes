@@ -64,6 +64,7 @@ class Runner:
                 now=self.clock(),
                 battery_soc=source.get(reflex.soc_key),
                 grid_power=source.get(reflex.grid_key),
+                battery_power=source.get(reflex.battery_key),
                 done_value=values.get(reflex.done_appliance, {}).get(reflex.done_key),
                 override_active=active,
             )
@@ -80,6 +81,7 @@ class Runner:
             report.append({"reflex": reflex.name, "phase": state.phase, "why": why,
                            "triggers_today": state.triggers,
                            "battery_soc": obs.battery_soc, "grid_power": obs.grid_power,
+                           "battery_power": obs.battery_power,
                            "done_value": obs.done_value, "override_active": obs.override_active,
                            "action": None if action is None else
                            {"kind": action.kind, "reason": action.reason,
@@ -98,7 +100,7 @@ class Runner:
         """Fetch every needed key, one request per appliance. Unreadable -> None."""
         wanted: dict[str, set[str]] = {}
         for r in self.reflexes:
-            wanted.setdefault(r.source, set()).update({r.soc_key, r.grid_key})
+            wanted.setdefault(r.source, set()).update({r.soc_key, r.grid_key, r.battery_key})
             if r.done_appliance and r.done_key:
                 wanted.setdefault(r.done_appliance, set()).add(r.done_key)
         out: dict[str, dict[str, Any]] = {}
@@ -141,8 +143,8 @@ class Runner:
                 await self.client.delete_override(target.appliance, target.key, owner)
             except HousevitalsError as err:
                 if err.status != 404:  # 404: it has already ended
-                    _LOGGER.warning("%s: ending the override failed, it ends on its own at the "
-                                    "end of the window: %s", reflex.name, err)
+                    _LOGGER.warning("%s: ending the override failed, it ends on its own at its "
+                                    "end time: %s", reflex.name, err)
 
     def _set_reachable(self, reachable: bool, err: Exception | None = None) -> None:
         if reachable != self._reachable:

@@ -28,17 +28,26 @@ through its single Modbus connection per device, and undoes when they end.
 
 ### `pv_surplus_boost`
 
-Raises a setpoint while there is sustained PV surplus.
+Raises a setpoint while there is sustained PV surplus. There is no start window:
+surplus itself means daylight. Only the end is bounded.
 
 | Phase | Enters when | Does |
 |-------|-------------|------|
-| `idle` | outside the time window, no surplus, the tank is already hot, or today's limit is reached | nothing |
-| `armed` | in the window: battery ≥ `min_battery_soc` and export ≥ `min_export_w` | waits until the surplus has held for `arm.hold_s` without interruption |
-| `boosting` | surplus held long enough | `PUT` override (target value until the end of the window) |
-| `done` | `done.key` ≥ `done.min` (e.g. tank hot), window over, or the override ended in housevitals | `DELETE` override (restores the previous value); nothing more today |
+| `idle` | no surplus, the tank is already hot, today's limit is reached, or less than `boost.min_duration_s` left before `boost.latest_end` | nothing |
+| `armed` | battery ≥ `min_battery_soc` and export ≥ `min_export_w` | waits until the surplus has held for `arm.hold_s` without interruption |
+| `boosting` | surplus held long enough | `PUT` override with the target value; it ends at whichever comes first: `boost.max_duration_s` after the start or `boost.latest_end` |
+| `done` | `done.key` ≥ `done.min` (e.g. tank hot), the end time is reached, or the override ended in housevitals | `DELETE` override (restores the previous value); nothing more today |
 
-While boosting, an import above `abort.max_import_w` for `abort.hold_s` (clouds) ends
-the override as well; the reflex may arm again if `max_per_day` allows. Values that are
+The end time is also the override's end in housevitals, so the heat pump returns to
+normal even if housereflex stops. Example: surplus confirmed at 11:10 → boost until
+14:10 (3 h); confirmed at 16:10 → until 18:00; at 17:40 → no boost (less than 30 min).
+
+While boosting, the reflex watches the **deficit**: grid import plus battery discharge.
+If the house draws more than `abort.max_deficit_w` from both together for
+`abort.hold_s` (clouds, dusk), the override ends as well; the reflex may arm again if
+`max_per_day` allows. Counting the battery matters: when PV drops, the battery covers the
+heat pump and grid import stays near zero, so an import limit alone would heat the tank
+from the battery. Values that are
 stale or unavailable never count as surplus. A running override is recognized after a
 restart (by its owner `housereflex/<name>`), and the number of boosts per day is kept in
 the state file.
@@ -72,7 +81,7 @@ Allow-list the register in housevitals' `devices.json` and give it a control tok
   "overrides": { "dhw_setpoint_min": { "min": 40, "max": 55, "max_duration_s": 21600 } } }
 ```
 
-`max_duration_s` must cover the reflex's time window (10–16 h = 6 h).
+housevitals' `max_duration_s` must be at least the reflex's `boost.max_duration_s` (3 h by default).
 
 ### housereflex
 
@@ -83,7 +92,7 @@ and adjust names and thresholds:
 |--------|---------|-------------|
 | `housevitals.url` | `http://127.0.0.1:8080` | housevitals service |
 | `housevitals.token_file` | – | File with the control token (or env `HOUSEREFLEX_TOKEN`); on the same host this is housevitals' token file |
-| `timezone` | `Europe/Berlin` | Time windows and days |
+| `timezone` | `Europe/Berlin` | `latest_end` and days |
 | `interval_s` | `60` | Seconds between rounds (≥ 10) |
 | `status_interval_s` | `1800` | A status line per reflex this often (`0`: only phase changes) |
 | `dry_run` | `true` | Only log what would be done; `--live` or `false` to act |
@@ -97,11 +106,11 @@ Per reflex (`type: pv_surplus_boost`):
 | `name` | – | Unique name (letters, digits, `_`) |
 | `enabled` | `true` | |
 | `target` | – | `appliance`, `key`, `value` of the override (names or aliases as in housevitals) |
-| `window` | `10:00`–`16:00` | Local time window; the override ends at `window.end` at the latest |
-| `source` | – | `appliance` with the battery and meter (the inverter); keys `battery_soc`, `grid_power` (positive = import) |
+| `boost` | 3 h, 30 min, `18:00` | `max_duration_s`: longest boost; `min_duration_s`: no start if less time is left before `latest_end`; `latest_end`: local time a boost ends at the latest |
+| `source` | – | `appliance` with the battery and meter (the inverter); keys `battery_soc`, `grid_power` (positive = import), `battery_power` (positive = discharging) |
 | `arm` | 90 %, 2500 W, 600 s | `min_battery_soc`, `min_export_w`, `hold_s` |
 | `done` | – | `appliance`, `key`, `min`: end early when reached (e.g. `dhw_temperature` ≥ 54) |
-| `abort` | 1000 W, 300 s | `max_import_w`, `hold_s` |
+| `abort` | 500 W, 300 s | `max_deficit_w` (grid import + battery discharge), `hold_s` |
 | `max_per_day` | `1` | Boosts per day |
 
 Two enabled reflexes may not override the same register.
@@ -136,7 +145,8 @@ launchctl kickstart -k gui/$(id -u)/local.housereflex
 
 Logs go to `~/Library/Logs/housereflex.log`: one line per phase change and per action,
 and a status line every 30 min naming the condition that holds a reflex back, e.g.
-`dhw_pv_boost: idle: window 10:00-16:00 (yes), battery 96 % >= 90 % (yes), export 7700 W >= 2500 W (yes), dhw_temperature 49.3 < 54 (yes), boosts today 0/1`.
+`dhw_pv_boost: idle: 30 min left before 18:00 (yes), battery 96 % >= 90 % (yes), export 7700 W >= 2500 W (yes), dhw_temperature 49.3 < 54 (yes), boosts today 0/1`;
+while boosting: `boosting: until 14:10, deficit -1200 W <= 500 W (yes), …`.
 Overrides show up in housevitals: `GET /api/v1/overrides`, its log, and the metric
 `housevitals_override_active{owner="housereflex/…"}` for Grafana.
 

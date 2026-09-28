@@ -18,14 +18,16 @@
         "key": "dhw_setpoint_min",
         "value": 55
       },
-      "window": {
-        "start": "10:00",
-        "end": "16:00"
+      "boost": {
+        "max_duration_s": 10800,
+        "min_duration_s": 1800,
+        "latest_end": "18:00"
       },
       "source": {
         "appliance": "inverter",
         "battery_soc": "battery_soc",
-        "grid_power": "grid_power"
+        "grid_power": "grid_power",
+        "battery_power": "battery_power"
       },
       "arm": {
         "min_battery_soc": 90,
@@ -38,7 +40,7 @@
         "min": 54
       },
       "abort": {
-        "max_import_w": 1000,
+        "max_deficit_w": 500,
         "hold_s": 300
       },
       "max_per_day": 1
