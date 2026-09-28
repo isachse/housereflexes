@@ -9,7 +9,7 @@ first reflex turns PV surplus into hot water: when the battery is full and power
 flowing into the grid, it raises a heat pump's hot-water setpoint for a while, so the
 surplus is stored as heat instead of being exported.
 
-It is the acting counterpart to [housevitals](https://github.com/isachse/housevitals-mcp),
+It is the acting counterpart to [housevitals](https://github.com/isachse/housevitals),
 which measures. housereflexes never talks to a device: it reads live values from
 housevitals and asks housevitals for **overrides**, which housevitals checks, writes
 through its single Modbus connection per device, and undoes when they end.
