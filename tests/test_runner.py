@@ -18,7 +18,7 @@ class FakeHousevitals:
     """Just enough of the housevitals REST API: values and overrides."""
 
     def __init__(self):
-        self.values = {"inverter": {"battery_soc": 95, "grid_power": -3000},
+        self.values = {"inverter": {"battery_soc": 95, "grid_power": -3000, "battery_power": 0},
                        "heatpump": {"dhw_temperature": 44}}
         self.overrides: list[dict] = []
         self.calls: list[tuple[str, str]] = []
@@ -62,7 +62,7 @@ CONFIG = {
     "reflexes": [{
         "name": "dhw_pv_boost", "type": "pv_surplus_boost",
         "target": {"appliance": "heatpump", "key": "dhw_setpoint_min", "value": 50},
-        "window": {"start": "10:00", "end": "16:00"},
+        "boost": {"max_duration_s": 10800, "latest_end": "18:00"},
         "source": {"appliance": "inverter"},
         "arm": {"hold_s": 600},
         "done": {"appliance": "heatpump", "key": "dhw_temperature", "min": 49},
@@ -96,7 +96,7 @@ async def test_boost_cycle(tmp_path):
     assert report["action"]["kind"] == "apply" and report["phase"] == "boosting"
     put = fake.overrides[0]
     assert put["owner"] == "housereflex/dhw_pv_boost" and put["value"] == 50
-    assert put["until"] == "2026-06-01T16:00:00+02:00"
+    assert put["until"] == "2026-06-01T14:10:00+02:00"  # 3 h
 
     fake.values["heatpump"]["dhw_temperature"] = 50
     clock.advance(30)
@@ -169,5 +169,6 @@ async def test_status_lines_on_quiet_days(tmp_path, caplog):
             clock.advance(10)
     lines = [r.message for r in caplog.records if "dhw_pv_boost: idle:" in r.message]
     assert len(lines) == 2 and "dhw_temperature 50 < 49 (no)" in lines[0]
+    assert "battery_power" in [k for k in report] and report["battery_power"] == 0
     assert report["why"].startswith("idle:")
     await client.close()

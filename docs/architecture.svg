@@ -73,7 +73,7 @@
     <text x="1070" y="267" text-anchor="middle" font-size="11" fill="#52514e">hot-water setpoint overridden</text>
     <rect x="980" y="310" width="180" height="56" rx="6" fill="#ffffff" stroke="#8a8984"/>
     <text x="1070" y="334" text-anchor="middle" font-weight="bold">Inverter + battery</text>
-    <text x="1070" y="352" text-anchor="middle" font-size="11" fill="#52514e">SOC, grid power</text>
+    <text x="1070" y="352" text-anchor="middle" font-size="11" fill="#52514e">SOC, grid, battery power</text>
   </g>
   <g stroke="#2a78d6" stroke-width="2" fill="none" marker-end="url(#arrow-blue)">
     <line x1="870" y1="335" x2="978" y2="175"/>
@@ -87,16 +87,16 @@
   <g font-size="13" fill="#0b0b0b">
     <rect x="60" y="455" width="220" height="56" rx="6" fill="#ffffff" stroke="#52514e"/>
     <text x="170" y="479" text-anchor="middle" font-weight="bold">idle</text>
-    <text x="170" y="497" text-anchor="middle" font-size="11" fill="#52514e">outside 10–16 h or no surplus</text>
+    <text x="170" y="497" text-anchor="middle" font-size="11" fill="#52514e">no surplus, or tank hot</text>
     <rect x="340" y="455" width="220" height="56" rx="6" fill="#ffffff" stroke="#52514e"/>
     <text x="450" y="479" text-anchor="middle" font-weight="bold">armed</text>
     <text x="450" y="497" text-anchor="middle" font-size="11" fill="#52514e">SOC ≥ 90 %, export ≥ 2.5 kW</text>
     <rect x="620" y="455" width="220" height="56" rx="6" fill="#ffffff" stroke="#d9730d" stroke-width="2"/>
     <text x="730" y="479" text-anchor="middle" font-weight="bold">boosting</text>
-    <text x="730" y="497" text-anchor="middle" font-size="11" fill="#52514e">override 55 °C until 16:00</text>
+    <text x="730" y="497" text-anchor="middle" font-size="11" fill="#52514e">55 °C, ≤ 3 h, ≤ 18:00</text>
     <rect x="900" y="455" width="220" height="56" rx="6" fill="#ffffff" stroke="#52514e"/>
     <text x="1010" y="479" text-anchor="middle" font-weight="bold">done</text>
-    <text x="1010" y="497" text-anchor="middle" font-size="11" fill="#52514e">until tomorrow</text>
+    <text x="1010" y="497" text-anchor="middle" font-size="11" fill="#52514e">or end time; until tomorrow</text>
   </g>
   <line x1="280" y1="483" x2="338" y2="483" stroke="#52514e" stroke-width="1.5" marker-end="url(#arrow)"/>
   <line x1="560" y1="483" x2="618" y2="483" stroke="#d9730d" stroke-width="2" marker-end="url(#arrow-orange)"/>
@@ -104,7 +104,7 @@
   <line x1="840" y1="483" x2="898" y2="483" stroke="#52514e" stroke-width="1.5" marker-end="url(#arrow)"/>
   <text x="869" y="475" text-anchor="middle" font-size="10" fill="#52514e">≥ 54 °C</text>
   <polyline points="730,511 730,540 170,540 170,513" fill="none" stroke="#52514e" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
-  <text x="450" y="556" text-anchor="middle" font-size="10" fill="#52514e">import &gt; 1 kW for 5 min → DELETE override (surplus lost while armed: back to idle as well)</text>
+  <text x="450" y="556" text-anchor="middle" font-size="10" fill="#52514e">grid + battery draw &gt; 500 W for 5 min → DELETE override (surplus lost while armed: back to idle as well)</text>
 
   <text x="30" y="600" font-size="12" fill="#52514e">Blue: the only path to the devices. Orange: the write path. If housereflex stops, housevitals still ends the override at its end time and restores the previous value.</text>
 </svg>

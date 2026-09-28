@@ -44,33 +44,37 @@ class PvSurplusBoost:
     """Raise a setpoint while there is sustained PV surplus, so a heat pump turns the
     surplus into stored heat (hot water or buffer) instead of feeding it into the grid.
 
-    Arms when, inside the time window, the battery is at least `min_battery_soc` and
-    at least `min_export_w` are exported for `arm_hold_s`. Then the target register is
-    overridden until the end of the window. The override is ended early when
-    `done_key` reaches `done_min` (e.g. the tank is hot) or when more than
-    `max_import_w` are imported for `abort_hold_s` (clouds).
+    Arms when the battery is at least `min_battery_soc` and at least `min_export_w`
+    are exported for `arm_hold_s`; there is no start window, surplus implies daylight.
+    The override then lasts until whichever comes first: `max_duration_s` after the
+    start or `latest_end` (local time). It is ended early when `done_key` reaches
+    `done_min` (e.g. the tank is hot) or when the house draws more than
+    `max_deficit_w` from grid and battery together for `abort_hold_s` (clouds, dusk).
+    A boost is not started if less than `min_duration_s` remain before `latest_end`.
     """
 
     name: str
     target: Target
-    window_start: time
-    window_end: time
-    source: str  # appliance providing battery_soc and grid_power (the inverter)
+    source: str  # appliance providing battery and grid values (the inverter)
+    max_duration_s: float = 10800.0
+    min_duration_s: float = 1800.0
+    latest_end: time = time(18, 0)
     min_battery_soc: float = 90.0
     min_export_w: float = 2500.0
     arm_hold_s: float = 600.0
     done_appliance: str | None = None
     done_key: str | None = None
     done_min: float | None = None
-    max_import_w: float = 1000.0
+    max_deficit_w: float = 500.0
     abort_hold_s: float = 300.0
     max_per_day: int = 1
     enabled: bool = True
     # Keys of the source appliance (housevitals data points).
     soc_key: str = "battery_soc"
     grid_key: str = "grid_power"  # positive = import, negative = export
+    battery_key: str = "battery_power"  # positive = discharging, negative = charging
 
-    OPTIONS = {"name", "type", "enabled", "target", "window", "source", "arm", "done",
+    OPTIONS = {"name", "type", "enabled", "target", "boost", "source", "arm", "done",
                "abort", "max_per_day"}
 
     @classmethod
@@ -79,15 +83,19 @@ class PvSurplusBoost:
         where = f"Reflex '{name}'"
         if not name.replace("_", "").isalnum():
             raise ConfigError("Every reflex needs a 'name' of letters, digits and _")
+        if "window" in data:
+            raise ConfigError(f"{where}: 'window' was replaced by 'boost' "
+                              "(max_duration_s, min_duration_s, latest_end)")
         _check_keys(where, data, cls.OPTIONS)
         target = data.get("target") or {}
         _check_keys(f"{where}, target", target, {"appliance", "key", "value"})
         if not all(k in target for k in ("appliance", "key", "value")):
             raise ConfigError(f"{where}: target needs appliance, key and value")
-        window = data.get("window") or {}
-        _check_keys(f"{where}, window", window, {"start", "end"})
+        boost = data.get("boost") or {}
+        _check_keys(f"{where}, boost", boost, {"max_duration_s", "min_duration_s", "latest_end"})
         source = data.get("source") or {}
-        _check_keys(f"{where}, source", source, {"appliance", "battery_soc", "grid_power"})
+        _check_keys(f"{where}, source", source,
+                    {"appliance", "battery_soc", "grid_power", "battery_power"})
         if not source.get("appliance"):
             raise ConfigError(f"{where}: source.appliance (the inverter) is required")
         arm = data.get("arm") or {}
@@ -97,28 +105,33 @@ class PvSurplusBoost:
         if done and not all(k in done for k in ("appliance", "key", "min")):
             raise ConfigError(f"{where}: done needs appliance, key and min")
         abort = data.get("abort") or {}
-        _check_keys(f"{where}, abort", abort, {"max_import_w", "hold_s"})
+        if "max_import_w" in abort:
+            raise ConfigError(f"{where}: abort.max_import_w was replaced by abort.max_deficit_w "
+                              "(grid import plus battery discharge)")
+        _check_keys(f"{where}, abort", abort, {"max_deficit_w", "hold_s"})
         reflex = cls(
             name=name,
             target=Target(str(target["appliance"]), str(target["key"]), target["value"]),
-            window_start=_time(f"{where}, window.start", window.get("start", "10:00")),
-            window_end=_time(f"{where}, window.end", window.get("end", "16:00")),
             source=str(source["appliance"]),
+            max_duration_s=float(boost.get("max_duration_s", 10800)),
+            min_duration_s=float(boost.get("min_duration_s", 1800)),
+            latest_end=_time(f"{where}, boost.latest_end", boost.get("latest_end", "18:00")),
             soc_key=str(source.get("battery_soc", "battery_soc")),
             grid_key=str(source.get("grid_power", "grid_power")),
+            battery_key=str(source.get("battery_power", "battery_power")),
             min_battery_soc=float(arm.get("min_battery_soc", 90)),
             min_export_w=float(arm.get("min_export_w", 2500)),
             arm_hold_s=float(arm.get("hold_s", 600)),
             done_appliance=str(done["appliance"]) if done else None,
             done_key=str(done["key"]) if done else None,
             done_min=float(done["min"]) if done else None,
-            max_import_w=float(abort.get("max_import_w", 1000)),
+            max_deficit_w=float(abort.get("max_deficit_w", 500)),
             abort_hold_s=float(abort.get("hold_s", 300)),
             max_per_day=int(data.get("max_per_day", 1)),
             enabled=bool(data.get("enabled", True)),
         )
-        if reflex.window_start >= reflex.window_end:
-            raise ConfigError(f"{where}: window.start must be before window.end")
+        if not 0 < reflex.min_duration_s <= reflex.max_duration_s:
+            raise ConfigError(f"{where}: need 0 < boost.min_duration_s <= boost.max_duration_s")
         if reflex.max_per_day < 1:
             raise ConfigError(f"{where}: max_per_day must be at least 1")
         return reflex
