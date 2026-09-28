@@ -155,3 +155,19 @@ async def test_running_override_is_recovered(tmp_path):
     report = (await runner.tick())[0]
     assert report["phase"] == "boosting" and report["override_active"] is True
     await client.close()
+
+
+async def test_status_lines_on_quiet_days(tmp_path, caplog):
+    import logging
+
+    fake, clock = FakeHousevitals(), Clock()
+    fake.values["heatpump"]["dhw_temperature"] = 50  # tank already hot: stays idle
+    runner, client = _runner(tmp_path, fake, clock=clock)
+    with caplog.at_level(logging.INFO, logger="housereflex.runner"):
+        for _ in range(4):  # 11:00 .. 11:30, status every 30 min
+            report = (await runner.tick())[0]
+            clock.advance(10)
+    lines = [r.message for r in caplog.records if "dhw_pv_boost: idle:" in r.message]
+    assert len(lines) == 2 and "dhw_temperature 50 < 49 (no)" in lines[0]
+    assert report["why"].startswith("idle:")
+    await client.close()

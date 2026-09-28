@@ -93,7 +93,7 @@
     <text x="450" y="497" text-anchor="middle" font-size="11" fill="#52514e">SOC ≥ 90 %, export ≥ 2.5 kW</text>
     <rect x="620" y="455" width="220" height="56" rx="6" fill="#ffffff" stroke="#d9730d" stroke-width="2"/>
     <text x="730" y="479" text-anchor="middle" font-weight="bold">boosting</text>
-    <text x="730" y="497" text-anchor="middle" font-size="11" fill="#52514e">override 50 °C until 16:00</text>
+    <text x="730" y="497" text-anchor="middle" font-size="11" fill="#52514e">override 55 °C until 16:00</text>
     <rect x="900" y="455" width="220" height="56" rx="6" fill="#ffffff" stroke="#52514e"/>
     <text x="1010" y="479" text-anchor="middle" font-weight="bold">done</text>
     <text x="1010" y="497" text-anchor="middle" font-size="11" fill="#52514e">until tomorrow</text>
@@ -102,7 +102,7 @@
   <line x1="560" y1="483" x2="618" y2="483" stroke="#d9730d" stroke-width="2" marker-end="url(#arrow-orange)"/>
   <text x="589" y="475" text-anchor="middle" font-size="10" fill="#d9730d">10 min</text>
   <line x1="840" y1="483" x2="898" y2="483" stroke="#52514e" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <text x="869" y="475" text-anchor="middle" font-size="10" fill="#52514e">≥ 49 °C</text>
+  <text x="869" y="475" text-anchor="middle" font-size="10" fill="#52514e">≥ 54 °C</text>
   <polyline points="730,511 730,540 170,540 170,513" fill="none" stroke="#52514e" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
   <text x="450" y="556" text-anchor="middle" font-size="10" fill="#52514e">import &gt; 1 kW for 5 min → DELETE override (surplus lost while armed: back to idle as well)</text>
 
