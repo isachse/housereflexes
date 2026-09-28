@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/logo.png" alt="housereflexes: a house whose control unit connects energy, PV, battery, water, mobility, gas and climate with rules and actions" width="420">
+</p>
+
 # housereflexes
 
 **housereflexes is an open-source response and orchestration layer for residential vital systems.**
