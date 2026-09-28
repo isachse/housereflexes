@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 620" role="img" aria-label="housereflex architecture: housereflex reads live values from housevitals and requests time-limited overrides through its control API; housevitals is the only Modbus client and writes, verifies and restores the setpoint." font-family="Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 620" role="img" aria-label="housereflexes architecture: housereflexes reads live values from housevitals and requests time-limited overrides through its control API; housevitals is the only Modbus client and writes, verifies and restores the setpoint." font-family="Helvetica, Arial, sans-serif">
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M0,0 L10,5 L0,10 z" fill="#52514e"/>
@@ -13,12 +13,12 @@
 
   <rect width="1280" height="620" fill="#fcfcfb"/>
 
-  <text x="30" y="40" font-size="20" font-weight="bold" fill="#0b0b0b">housereflex · architecture</text>
-  <text x="30" y="64" font-size="13" fill="#52514e">Decides when to act; housevitals carries it out. housereflex never opens a Modbus connection.</text>
+  <text x="30" y="40" font-size="20" font-weight="bold" fill="#0b0b0b">housereflexes · architecture</text>
+  <text x="30" y="64" font-size="13" fill="#52514e">Decides when to act; housevitals carries it out. housereflexes never opens a Modbus connection.</text>
 
-  <!-- housereflex process -->
+  <!-- housereflexes process -->
   <rect x="30" y="95" width="380" height="300" rx="10" fill="none" stroke="#d9730d" stroke-dasharray="6 5"/>
-  <text x="46" y="118" font-size="12" font-weight="bold" fill="#52514e">HOUSEREFLEX · OWN PROCESS (launchd)</text>
+  <text x="46" y="118" font-size="12" font-weight="bold" fill="#52514e">HOUSEREFLEXES · OWN PROCESS (launchd)</text>
   <rect x="60" y="140" width="320" height="60" rx="6" fill="#ffffff" stroke="#52514e"/>
   <text x="220" y="165" text-anchor="middle" font-size="13" font-weight="bold" fill="#0b0b0b">Runner · every 60 s</text>
   <text x="220" y="183" text-anchor="middle" font-size="11" fill="#52514e">observe → step each reflex → act</text>
@@ -56,7 +56,7 @@
   <line x1="775" y1="301" x2="775" y2="323" stroke="#d9730d" stroke-width="2" marker-end="url(#arrow-orange)"/>
   <line x1="862" y1="323" x2="862" y2="202" stroke="#2a78d6" stroke-width="2" marker-end="url(#arrow-blue)"/>
 
-  <!-- housereflex -> housevitals -->
+  <!-- housereflexes -> housevitals -->
   <line x1="380" y1="170" x2="498" y2="170" stroke="#52514e" stroke-width="1.5" marker-end="url(#arrow)"/>
   <text x="440" y="162" text-anchor="middle" font-size="10" fill="#52514e">reads</text>
   <line x1="380" y1="268" x2="498" y2="268" stroke="#d9730d" stroke-width="2" marker-end="url(#arrow-orange)"/>
@@ -106,5 +106,5 @@
   <polyline points="730,511 730,540 170,540 170,513" fill="none" stroke="#52514e" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
   <text x="450" y="556" text-anchor="middle" font-size="10" fill="#52514e">grid + battery draw &gt; 500 W for 5 min → DELETE override (surplus lost while armed: back to idle as well)</text>
 
-  <text x="30" y="600" font-size="12" fill="#52514e">Blue: the only path to the devices. Orange: the write path. If housereflex stops, housevitals still ends the override at its end time and restores the previous value.</text>
+  <text x="30" y="600" font-size="12" fill="#52514e">Blue: the only path to the devices. Orange: the write path. If housereflexes stops, housevitals still ends the override at its end time and restores the previous value.</text>
 </svg>

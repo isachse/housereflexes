@@ -35,7 +35,7 @@ class Runner:
 
     async def run(self) -> None:
         mode = "dry run (no overrides are written)" if self.dry_run else "live"
-        _LOGGER.info("housereflex started, %s: %s", mode,
+        _LOGGER.info("housereflexes started, %s: %s", mode,
                      ", ".join(r.name for r in self.reflexes) or "no enabled reflexes")
         while True:
             try:

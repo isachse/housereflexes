@@ -1,7 +1,7 @@
 [project]
-name = "housereflex"
+name = "housereflexes"
 version = "0.1.0"
-description = "housereflex: automatic reactions to PV surplus and other house vitals, carried out through the housevitals control API"
+description = "housereflexes: automatic reactions to PV surplus and other house vitals, carried out through the housevitals control API"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
@@ -11,14 +11,14 @@ dependencies = ["httpx>=0.27"]
 dev = ["pytest>=8", "pytest-asyncio>=0.23"]
 
 [project.scripts]
-housereflex = "housereflex.cli:main"
+housereflexes = "housereflexes.cli:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/housereflex"]
+packages = ["src/housereflexes"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

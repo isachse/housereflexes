@@ -1,6 +1,6 @@
 """Client for the housevitals REST API: live values and the control API (overrides).
 
-housereflex never talks to a device itself; housevitals is the only Modbus client.
+housereflexes never talks to a device itself; housevitals is the only Modbus client.
 """
 
 from __future__ import annotations
