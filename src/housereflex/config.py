@@ -133,6 +133,7 @@ class Config:
     token_file: str | None = None
     timezone: str = "Europe/Berlin"
     interval_s: float = 60.0
+    status_interval_s: float = 1800.0  # status line per reflex; 0 = only on phase changes
     dry_run: bool = True
     owner_prefix: str = "housereflex"
     state_file: str = "~/.local/state/housereflex/state.json"
@@ -160,7 +161,7 @@ class Config:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Config:
-        _check_keys("Config", data, {"housevitals", "timezone", "interval_s", "dry_run",
+        _check_keys("Config", data, {"housevitals", "timezone", "interval_s", "status_interval_s", "dry_run",
                                      "owner_prefix", "state_file", "reflexes"})
         hv = data.get("housevitals") or {}
         _check_keys("housevitals", hv, {"url", "token_file"})
@@ -182,6 +183,7 @@ class Config:
             token_file=hv.get("token_file"),
             timezone=str(data.get("timezone", cls.timezone)),
             interval_s=float(data.get("interval_s", cls.interval_s)),
+            status_interval_s=float(data.get("status_interval_s", cls.status_interval_s)),
             dry_run=bool(data.get("dry_run", True)),
             owner_prefix=str(data.get("owner_prefix", cls.owner_prefix)),
             state_file=str(data.get("state_file", cls.state_file)),
@@ -193,6 +195,8 @@ class Config:
             raise ConfigError(f"Unknown time zone '{config.timezone}'") from err
         if config.interval_s < 10:
             raise ConfigError("interval_s must be at least 10")
+        if config.status_interval_s < 0:
+            raise ConfigError("status_interval_s must not be negative")
         return config
 
 

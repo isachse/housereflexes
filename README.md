@@ -45,8 +45,10 @@ the state file.
 
 Example for a BLW NEO heat pump: the controller keeps the hot water at the normal
 setpoint during its time program and at the minimum setpoint (e.g. 42 °C) otherwise.
-Overriding `dhw_setpoint_min` with 50 °C makes it heat right away, whatever the time
-program says; afterwards the minimum is back at 42 °C. The heat pump's own time program
+Overriding `dhw_setpoint_min` with 55 °C makes it heat right away, whatever the time
+program says; afterwards the minimum is back at 42 °C. Pick a target clearly above the
+tank's usual temperature (and the `done` threshold just below the target), otherwise a
+tank heated in the morning already counts as "hot" and the surplus is not used. The heat pump's own time program
 stays the fallback.
 
 ## Installation
@@ -83,6 +85,7 @@ and adjust names and thresholds:
 | `housevitals.token_file` | – | File with the control token (or env `HOUSEREFLEX_TOKEN`); on the same host this is housevitals' token file |
 | `timezone` | `Europe/Berlin` | Time windows and days |
 | `interval_s` | `60` | Seconds between rounds (≥ 10) |
+| `status_interval_s` | `1800` | A status line per reflex this often (`0`: only phase changes) |
 | `dry_run` | `true` | Only log what would be done; `--live` or `false` to act |
 | `state_file` | `~/.local/state/housereflex/state.json` | Boosts per day |
 | `owner_prefix` | `housereflex` | Owner shown in housevitals: `<prefix>/<reflex name>` |
@@ -97,7 +100,7 @@ Per reflex (`type: pv_surplus_boost`):
 | `window` | `10:00`–`16:00` | Local time window; the override ends at `window.end` at the latest |
 | `source` | – | `appliance` with the battery and meter (the inverter); keys `battery_soc`, `grid_power` (positive = import) |
 | `arm` | 90 %, 2500 W, 600 s | `min_battery_soc`, `min_export_w`, `hold_s` |
-| `done` | – | `appliance`, `key`, `min`: end early when reached (e.g. `dhw_temperature` ≥ 49) |
+| `done` | – | `appliance`, `key`, `min`: end early when reached (e.g. `dhw_temperature` ≥ 54) |
 | `abort` | 1000 W, 300 s | `max_import_w`, `hold_s` |
 | `max_per_day` | `1` | Boosts per day |
 
@@ -131,7 +134,9 @@ Restart after config changes:
 launchctl kickstart -k gui/$(id -u)/local.housereflex
 ```
 
-Logs go to `~/Library/Logs/housereflex.log`: one line per phase change and per action.
+Logs go to `~/Library/Logs/housereflex.log`: one line per phase change and per action,
+and a status line every 30 min naming the condition that holds a reflex back, e.g.
+`dhw_pv_boost: idle: window 10:00-16:00 (yes), battery 96 % >= 90 % (yes), export 7700 W >= 2500 W (yes), dhw_temperature 49.3 < 54 (yes), boosts today 0/1`.
 Overrides show up in housevitals: `GET /api/v1/overrides`, its log, and the metric
 `housevitals_override_active{owner="housereflex/…"}` for Grafana.
 

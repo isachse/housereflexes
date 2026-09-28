@@ -5,6 +5,7 @@
   },
   "timezone": "Europe/Berlin",
   "interval_s": 60,
+  "status_interval_s": 1800,
   "dry_run": true,
   "state_file": "~/.local/state/housereflex/state.json",
   "reflexes": [
@@ -12,12 +13,34 @@
       "name": "dhw_pv_boost",
       "type": "pv_surplus_boost",
       "enabled": true,
-      "target": { "appliance": "heatpump2", "key": "dhw_setpoint_min", "value": 50 },
-      "window": { "start": "10:00", "end": "16:00" },
-      "source": { "appliance": "inverter", "battery_soc": "battery_soc", "grid_power": "grid_power" },
-      "arm": { "min_battery_soc": 90, "min_export_w": 2500, "hold_s": 600 },
-      "done": { "appliance": "heatpump2", "key": "dhw_temperature", "min": 49 },
-      "abort": { "max_import_w": 1000, "hold_s": 300 },
+      "target": {
+        "appliance": "heatpump2",
+        "key": "dhw_setpoint_min",
+        "value": 55
+      },
+      "window": {
+        "start": "10:00",
+        "end": "16:00"
+      },
+      "source": {
+        "appliance": "inverter",
+        "battery_soc": "battery_soc",
+        "grid_power": "grid_power"
+      },
+      "arm": {
+        "min_battery_soc": 90,
+        "min_export_w": 2500,
+        "hold_s": 600
+      },
+      "done": {
+        "appliance": "heatpump2",
+        "key": "dhw_temperature",
+        "min": 54
+      },
+      "abort": {
+        "max_import_w": 1000,
+        "hold_s": 300
+      },
       "max_per_day": 1
     }
   ]

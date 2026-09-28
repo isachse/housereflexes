@@ -148,3 +148,16 @@ def test_token(monkeypatch, tmp_path):
     monkeypatch.setenv("HOUSEREFLEX_TOKEN", "short")
     with pytest.raises(ConfigError, match="at least 16"):
         config.token()
+
+
+def test_explain_names_the_blocking_condition():
+    from housereflex.reflexes import explain
+
+    state = State()
+    o = obs(at(14, 0), soc=96, grid=-7700, dhw=49.3)
+    step(REFLEX, state, o)
+    line = explain(REFLEX, state, o)
+    assert line.startswith("idle: window 10:00-16:00 (yes)")
+    assert "battery 96 % >= 90 % (yes)" in line and "export 7700 W >= 2500 W (yes)" in line
+    assert "dhw_temperature 49.3 < 49 (no)" in line and "boosts today 0/1" in line
+    assert "battery unknown (no)" in explain(REFLEX, state, obs(at(14, 0), soc=None))

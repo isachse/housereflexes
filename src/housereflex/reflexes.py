@@ -88,6 +88,31 @@ def step(reflex: PvSurplusBoost, state: State, obs: Observation) -> Action | Non
     return None
 
 
+def explain(reflex: PvSurplusBoost, state: State, obs: Observation) -> str:
+    """One line on where the reflex stands and which condition holds it back."""
+
+    def check(label: str, value: float | None, unit: str, op: str, limit: float, ok: bool) -> str:
+        if value is None:
+            return f"{label} unknown (no)"
+        return f"{label} {value:g}{unit} {op} {limit:g}{unit} ({'yes' if ok else 'no'})"
+
+    window = f"{reflex.window_start:%H:%M}-{reflex.window_end:%H:%M}"
+    in_window = reflex.window_start <= obs.now.time() < reflex.window_end
+    export = None if obs.grid_power is None else -obs.grid_power
+    parts = [
+        f"window {window} ({'yes' if in_window else 'no'})",
+        check("battery", obs.battery_soc, " %", ">=", reflex.min_battery_soc,
+              obs.battery_soc is not None and obs.battery_soc >= reflex.min_battery_soc),
+        check("export", export, " W", ">=", reflex.min_export_w,
+              export is not None and export >= reflex.min_export_w),
+    ]
+    if reflex.done_min is not None:
+        parts.append(check(reflex.done_key, obs.done_value, "", "<", reflex.done_min,
+                           obs.done_value is not None and obs.done_value < reflex.done_min))
+    parts.append(f"boosts today {state.triggers}/{reflex.max_per_day}")
+    return f"{state.phase}: " + ", ".join(parts)
+
+
 def _boosting(reflex: PvSurplusBoost, state: State, obs: Observation, ts: float,
               in_window: bool) -> Action | None:
     if not obs.override_active:

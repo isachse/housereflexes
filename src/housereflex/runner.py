@@ -14,7 +14,7 @@ from typing import Any
 
 from .client import HousevitalsClient, HousevitalsError
 from .config import Config, PvSurplusBoost
-from .reflexes import BOOSTING, DONE, IDLE, Action, Observation, State, step
+from .reflexes import BOOSTING, DONE, IDLE, Action, Observation, State, explain, step
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +30,7 @@ class Runner:
         self.state_file = Path(config.state_file).expanduser() if config.state_file else None
         self.states: dict[str, State] = {r.name: State() for r in self.reflexes}
         self._reachable = True
+        self._last_status: dict[str, float] = {}  # reflex -> time of the last status line
         self._load()
 
     async def run(self) -> None:
@@ -68,11 +69,16 @@ class Runner:
             )
             before = state.phase
             action = step(reflex, state, obs)
+            why = explain(reflex, state, obs)
             if state.phase != before:
-                _LOGGER.info("%s: %s -> %s", reflex.name, before, state.phase)
+                _LOGGER.info("%s: %s -> %s (%s)", reflex.name, before, state.phase, why)
+                self._last_status[reflex.name] = obs.now.timestamp()
+            else:
+                self._status(reflex.name, obs.now.timestamp(), why)
             if action is not None:
                 await self._act(reflex, state, action)
-            report.append({"reflex": reflex.name, "phase": state.phase, "triggers_today": state.triggers,
+            report.append({"reflex": reflex.name, "phase": state.phase, "why": why,
+                           "triggers_today": state.triggers,
                            "battery_soc": obs.battery_soc, "grid_power": obs.grid_power,
                            "done_value": obs.done_value, "override_active": obs.override_active,
                            "action": None if action is None else
@@ -80,6 +86,13 @@ class Runner:
                             "until": action.until.isoformat() if action.until else None}})
         self._save()
         return report
+
+    def _status(self, name: str, ts: float, why: str) -> None:
+        """A status line every status_interval_s, so quiet days leave a trace."""
+        interval = self.config.status_interval_s
+        if interval and ts - self._last_status.get(name, float("-inf")) >= interval:
+            _LOGGER.info("%s: %s", name, why)
+            self._last_status[name] = ts
 
     async def _values(self) -> dict[str, dict[str, Any]]:
         """Fetch every needed key, one request per appliance. Unreadable -> None."""
