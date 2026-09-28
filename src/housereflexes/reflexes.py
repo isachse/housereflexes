@@ -9,7 +9,7 @@ No I/O here, so every decision can be tested with plain values and a fake clock.
 
 A boost ends at whichever comes first: `max_duration_s` after its start or
 `latest_end`. That end is also the override's end time in housevitals, so the heat
-pump returns to normal even if housereflex stops.
+pump returns to normal even if housereflexes stops.
 """
 
 from __future__ import annotations

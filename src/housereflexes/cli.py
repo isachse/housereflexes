@@ -1,4 +1,4 @@
-"""Command line: `housereflex --config reflexes.json [--once] [--dry-run | --live]`."""
+"""Command line: `housereflexes --config reflexes.json [--once] [--dry-run | --live]`."""
 
 from __future__ import annotations
 
@@ -16,9 +16,9 @@ from .runner import Runner
 
 
 def main(argv: list[str] | None = None) -> None:
-    p = argparse.ArgumentParser(prog="housereflex", description=__doc__)
-    p.add_argument("--config", default=os.environ.get("HOUSEREFLEX_CONFIG"),
-                   help="JSON config (see reflexes.example.json); or HOUSEREFLEX_CONFIG")
+    p = argparse.ArgumentParser(prog="housereflexes", description=__doc__)
+    p.add_argument("--config", default=os.environ.get("HOUSEREFLEXES_CONFIG"),
+                   help="JSON config (see reflexes.example.json); or HOUSEREFLEXES_CONFIG")
     mode = p.add_mutually_exclusive_group()
     mode.add_argument("--dry-run", action="store_true", help="only log what would be done")
     mode.add_argument("--live", action="store_true", help="write overrides (overrides dry_run)")
@@ -29,15 +29,15 @@ def main(argv: list[str] | None = None) -> None:
                         format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     logging.getLogger("httpx").setLevel(logging.WARNING)
     if not args.config:
-        p.error("pass --config or set HOUSEREFLEX_CONFIG")
+        p.error("pass --config or set HOUSEREFLEXES_CONFIG")
     try:
         config = load_config(args.config)
         dry_run = True if args.dry_run else False if args.live else config.dry_run
         token = config.token()
     except ConfigError as err:
-        sys.exit(f"housereflex: {err}")
+        sys.exit(f"housereflexes: {err}")
     if not dry_run and token is None:
-        sys.exit("housereflex: live mode needs a token (HOUSEREFLEX_TOKEN or housevitals.token_file)")
+        sys.exit("housereflexes: live mode needs a token (HOUSEREFLEXES_TOKEN or housevitals.token_file)")
     asyncio.run(_run(config, token, dry_run, args.once))
 
 

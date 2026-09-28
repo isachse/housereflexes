@@ -6,9 +6,9 @@ from zoneinfo import ZoneInfo
 
 import httpx
 
-from housereflex.client import HousevitalsClient
-from housereflex.config import Config
-from housereflex.runner import Runner
+from housereflexes.client import HousevitalsClient
+from housereflexes.config import Config
+from housereflexes.runner import Runner
 
 TZ = ZoneInfo("Europe/Berlin")
 TOKEN = "test-token-0123456789"
@@ -95,7 +95,7 @@ async def test_boost_cycle(tmp_path):
     report = (await runner.tick())[0]
     assert report["action"]["kind"] == "apply" and report["phase"] == "boosting"
     put = fake.overrides[0]
-    assert put["owner"] == "housereflex/dhw_pv_boost" and put["value"] == 50
+    assert put["owner"] == "housereflexes/dhw_pv_boost" and put["value"] == 50
     assert put["until"] == "2026-06-01T14:10:00+02:00"  # 3 h
 
     fake.values["heatpump"]["dhw_temperature"] = 50
@@ -150,7 +150,7 @@ async def test_outage_pauses_and_recovers(tmp_path):
 async def test_running_override_is_recovered(tmp_path):
     fake, clock = FakeHousevitals(), Clock()
     fake.overrides = [{"appliance": "heatpump", "key": "dhw_setpoint_min",
-                       "owner": "housereflex/dhw_pv_boost", "value": 50}]
+                       "owner": "housereflexes/dhw_pv_boost", "value": 50}]
     runner, client = _runner(tmp_path, fake, clock=clock)
     report = (await runner.tick())[0]
     assert report["phase"] == "boosting" and report["override_active"] is True
@@ -163,7 +163,7 @@ async def test_status_lines_on_quiet_days(tmp_path, caplog):
     fake, clock = FakeHousevitals(), Clock()
     fake.values["heatpump"]["dhw_temperature"] = 50  # tank already hot: stays idle
     runner, client = _runner(tmp_path, fake, clock=clock)
-    with caplog.at_level(logging.INFO, logger="housereflex.runner"):
+    with caplog.at_level(logging.INFO, logger="housereflexes.runner"):
         for _ in range(4):  # 11:00 .. 11:30, status every 30 min
             report = (await runner.tick())[0]
             clock.advance(10)

@@ -148,8 +148,8 @@ class Config:
     interval_s: float = 60.0
     status_interval_s: float = 1800.0  # status line per reflex; 0 = only on phase changes
     dry_run: bool = True
-    owner_prefix: str = "housereflex"
-    state_file: str = "~/.local/state/housereflex/state.json"
+    owner_prefix: str = "housereflexes"
+    state_file: str = "~/.local/state/housereflexes/state.json"
     reflexes: list[PvSurplusBoost] = field(default_factory=list)
 
     @property
@@ -160,8 +160,8 @@ class Config:
         return f"{self.owner_prefix}/{reflex.name}"
 
     def token(self) -> str | None:
-        """HOUSEREFLEX_TOKEN, else the token file. Never part of the config file."""
-        token = os.environ.get("HOUSEREFLEX_TOKEN")
+        """HOUSEREFLEXES_TOKEN, else the token file. Never part of the config file."""
+        token = os.environ.get("HOUSEREFLEXES_TOKEN")
         if not token and self.token_file:
             try:
                 token = Path(self.token_file).expanduser().read_text(encoding="utf-8")

@@ -5,8 +5,8 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from housereflex.config import Config, ConfigError, PvSurplusBoost
-from housereflex.reflexes import ARMED, BOOSTING, DONE, IDLE, Observation, State, explain, step
+from housereflexes.config import Config, ConfigError, PvSurplusBoost
+from housereflexes.reflexes import ARMED, BOOSTING, DONE, IDLE, Observation, State, explain, step
 
 TZ = ZoneInfo("Europe/Berlin")
 REFLEX = PvSurplusBoost.from_dict({
@@ -191,12 +191,12 @@ def test_config_validation():
 
 
 def test_token(monkeypatch, tmp_path):
-    monkeypatch.delenv("HOUSEREFLEX_TOKEN", raising=False)
+    monkeypatch.delenv("HOUSEREFLEXES_TOKEN", raising=False)
     config = Config()
     assert config.token() is None
     (tmp_path / "t").write_text("abcdefghijklmnopqrstuvwxyz\n")
     config.token_file = str(tmp_path / "t")
     assert config.token() == "abcdefghijklmnopqrstuvwxyz"
-    monkeypatch.setenv("HOUSEREFLEX_TOKEN", "short")
+    monkeypatch.setenv("HOUSEREFLEXES_TOKEN", "short")
     with pytest.raises(ConfigError, match="at least 16"):
         config.token()

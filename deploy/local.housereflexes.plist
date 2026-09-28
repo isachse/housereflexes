@@ -3,10 +3,10 @@
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>local.housereflex</string>
+  <string>local.housereflexes</string>
   <key>ProgramArguments</key>
   <array>
-    <string>__PROJECT_DIR__/.venv/bin/housereflex</string>
+    <string>__PROJECT_DIR__/.venv/bin/housereflexes</string>
     <string>--config</string>
     <string>__PROJECT_DIR__/reflexes.json</string>
   </array>
@@ -22,8 +22,8 @@
   <key>ProcessType</key>
   <string>Background</string>
   <key>StandardOutPath</key>
-  <string>__HOME__/Library/Logs/housereflex.log</string>
+  <string>__HOME__/Library/Logs/housereflexes.log</string>
   <key>StandardErrorPath</key>
-  <string>__HOME__/Library/Logs/housereflex.log</string>
+  <string>__HOME__/Library/Logs/housereflexes.log</string>
 </dict>
 </plist>

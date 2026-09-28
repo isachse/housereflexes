@@ -7,7 +7,7 @@
   "interval_s": 60,
   "status_interval_s": 1800,
   "dry_run": true,
-  "state_file": "~/.local/state/housereflex/state.json",
+  "state_file": "~/.local/state/housereflexes/state.json",
   "reflexes": [
     {
       "name": "dhw_pv_boost",
