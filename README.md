@@ -1,9 +1,13 @@
 # housereflexes
 
-`housereflexes` is an open-source (MIT) service that reacts automatically to the state
-of a house's energy system. Its first reflex turns PV surplus into hot water: when the
-battery is full and power is flowing into the grid, it raises a heat pump's hot-water
-setpoint for a while, so the surplus is stored as heat instead of being exported.
+**housereflexes is an open-source response and orchestration layer for residential vital systems.**
+
+It connects vital data with rules and actions, enabling systems to respond to changing conditions.
+
+The service (MIT) reacts automatically to the state of a house's energy system. Its
+first reflex turns PV surplus into hot water: when the battery is full and power is
+flowing into the grid, it raises a heat pump's hot-water setpoint for a while, so the
+surplus is stored as heat instead of being exported.
 
 It is the acting counterpart to [housevitals](https://github.com/isachse/housevitals-mcp),
 which measures. housereflexes never talks to a device: it reads live values from
