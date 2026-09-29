@@ -16,7 +16,7 @@
       "target": {
         "appliance": "heatpump2",
         "key": "dhw_setpoint_min",
-        "value": 55
+        "value": 45
       },
       "boost": {
         "max_duration_s": 10800,
@@ -37,7 +37,8 @@
       "done": {
         "appliance": "heatpump2",
         "key": "dhw_temperature",
-        "min": 54
+        "min": 49,
+        "start_below": 44
       },
       "abort": {
         "max_deficit_w": 500,

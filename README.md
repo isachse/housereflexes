@@ -61,12 +61,19 @@ restart (by its owner `housereflexes/<name>`), and the number of boosts per day 
 the state file.
 
 Example for a BLW NEO heat pump: the controller keeps the hot water at the normal
-setpoint during its time program and at the minimum setpoint (e.g. 42 °C) otherwise.
-Overriding `dhw_setpoint_min` with 55 °C makes it heat right away, whatever the time
-program says; afterwards the minimum is back at 42 °C. Pick a target clearly above the
-tank's usual temperature (and the `done` threshold just below the target), otherwise a
-tank heated in the morning already counts as "hot" and the surplus is not used. The heat pump's own time program
-stays the fallback.
+setpoint (`dhw_setpoint_max`, e.g. 50 °C) during its time program and at the minimum
+setpoint (e.g. 42 °C) otherwise, and starts a charge when the tank falls below the
+minimum. Raising `dhw_setpoint_min` therefore starts heating right away, whatever the
+time program says; afterwards the minimum is back at 42 °C.
+
+Limits measured on a BLW NEO: it accepts a minimum of at most the normal setpoint − 5 K
+(45 °C with 50 °C) and changes a higher value back after about 5 s (housevitals refuses
+such a request with `422`); the normal setpoint itself cannot be raised over Modbus
+(a limit set on the controller). So the boost raises the minimum to 45 °C, but only
+while the tank is below 44 °C (`done.start_below`), e.g. in the afternoon after a lot
+of hot water was used, and ends at 49 °C (`done.min`). If the limit on the controller
+is raised, a higher target (and matching thresholds) work the same way. The heat
+pump's own time program stays the fallback.
 
 ## Installation
 
@@ -117,7 +124,7 @@ Per reflex (`type: pv_surplus_boost`):
 | `boost` | 3 h, 30 min, `18:00` | `max_duration_s`: longest boost; `min_duration_s`: no start if less time is left before `latest_end`; `latest_end`: local time a boost ends at the latest |
 | `source` | – | `appliance` with the battery and meter (the inverter); keys `battery_soc`, `grid_power` (positive = import), `battery_power` (positive = discharging) |
 | `arm` | 90 %, 2500 W, 600 s | `min_battery_soc`, `min_export_w`, `hold_s` |
-| `done` | – | `appliance`, `key`, `min`: end early when reached (e.g. `dhw_temperature` ≥ 54) |
+| `done` | – | `appliance`, `key`, `min`: end early when reached (e.g. `dhw_temperature` ≥ 49); optional `start_below`: arm only while the value is below it (e.g. 44), for controllers that only heat when the tank is clearly below the raised setpoint |
 | `abort` | 500 W, 300 s | `max_deficit_w` (grid import + battery discharge), `hold_s` |
 | `max_per_day` | `1` | Boosts per day |
 
@@ -153,7 +160,7 @@ launchctl kickstart -k gui/$(id -u)/local.housereflexes
 
 Logs go to `~/Library/Logs/housereflexes.log`: one line per phase change and per action,
 and a status line every 30 min naming the condition that holds a reflex back, e.g.
-`dhw_pv_boost: idle: 30 min left before 18:00 (yes), battery 96 % >= 90 % (yes), export 7700 W >= 2500 W (yes), dhw_temperature 49.3 < 54 (yes), boosts today 0/1`;
+`dhw_pv_boost: idle: 30 min left before 18:00 (yes), battery 96 % >= 90 % (yes), export 7700 W >= 2500 W (yes), dhw_temperature 47.3 < 44 (no), boosts today 0/1`;
 while boosting: `boosting: until 14:10, deficit -1200 W <= 500 W (yes), …`.
 Overrides show up in housevitals: `GET /api/v1/overrides`, its log, and the metric
 `housevitals_override_active{owner="housereflexes/…"}` for Grafana.

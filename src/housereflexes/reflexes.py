@@ -108,6 +108,7 @@ def _ready(reflex: PvSurplusBoost, state: State, obs: Observation) -> bool:
         remaining >= reflex.min_duration_s
         and state.triggers < reflex.max_per_day
         and not _tank_done(reflex, obs)
+        and _cold_enough(reflex, obs)
         and obs.battery_soc is not None and obs.battery_soc >= reflex.min_battery_soc
         and obs.grid_power is not None and -obs.grid_power >= reflex.min_export_w
     )
@@ -116,6 +117,11 @@ def _ready(reflex: PvSurplusBoost, state: State, obs: Observation) -> bool:
 def _tank_done(reflex: PvSurplusBoost, obs: Observation) -> bool:
     return (reflex.done_min is not None and obs.done_value is not None
             and obs.done_value >= reflex.done_min)
+
+
+def _cold_enough(reflex: PvSurplusBoost, obs: Observation) -> bool:
+    """With start_below: only when the raised setpoint will actually start heating."""
+    return reflex.start_below is None or (obs.done_value is not None and obs.done_value < reflex.start_below)
 
 
 def explain(reflex: PvSurplusBoost, state: State, obs: Observation) -> str:
@@ -143,7 +149,10 @@ def explain(reflex: PvSurplusBoost, state: State, obs: Observation) -> str:
             check("export", export, " W", ">=", reflex.min_export_w,
                   export is not None and export >= reflex.min_export_w),
         ]
-    if reflex.done_min is not None:
+    if reflex.start_below is not None and state.phase != BOOSTING:
+        parts.append(check(reflex.done_key, obs.done_value, "", "<", reflex.start_below,
+                           _cold_enough(reflex, obs)))
+    elif reflex.done_min is not None:
         parts.append(check(reflex.done_key, obs.done_value, "", "<", reflex.done_min,
                            obs.done_value is not None and obs.done_value < reflex.done_min))
     parts.append(f"boosts today {state.triggers}/{reflex.max_per_day}")

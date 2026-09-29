@@ -200,3 +200,36 @@ def test_token(monkeypatch, tmp_path):
     monkeypatch.setenv("HOUSEREFLEXES_TOKEN", "short")
     with pytest.raises(ConfigError, match="at least 16"):
         config.token()
+
+
+LIMITED = PvSurplusBoost.from_dict({
+    "name": "dhw_pv_boost", "type": "pv_surplus_boost",
+    "target": {"appliance": "heatpump", "key": "dhw_setpoint_min", "value": 45},
+    "source": {"appliance": "inverter"},
+    "done": {"appliance": "heatpump", "key": "dhw_temperature", "min": 49, "start_below": 44},
+})
+
+
+def test_start_below_waits_for_a_cold_enough_tank():
+    """A controller that only charges when the tank is below the raised minimum: arm
+    only below start_below, then heat until done.min."""
+    state = State()
+    warm = [step(LIMITED, state, obs(at(13, m), dhw=47)) for m in range(0, 30, 5)]
+    assert warm == [None] * 6 and state.phase == IDLE
+    assert "dhw_temperature 47 < 44 (no)" in explain(LIMITED, state, obs(at(13, 30), dhw=47))
+    step(LIMITED, state, obs(at(14, 0), dhw=43.5))
+    action = step(LIMITED, state, obs(at(14, 10), dhw=43.5))
+    assert action.kind == "apply" and state.phase == BOOSTING
+    # while heating, the tank passes start_below without ending the boost
+    assert step(LIMITED, state, obs(at(14, 40), dhw=46, active=True)) is None
+    done = step(LIMITED, state, obs(at(15, 0), dhw=49.2, active=True))
+    assert done.kind == "release" and state.phase == DONE
+
+
+def test_start_below_must_not_exceed_done_min():
+    with pytest.raises(ConfigError, match="start_below"):
+        PvSurplusBoost.from_dict({
+            "name": "x", "type": "pv_surplus_boost",
+            "target": {"appliance": "hp", "key": "dhw_setpoint_min", "value": 45},
+            "source": {"appliance": "inverter"},
+            "done": {"appliance": "hp", "key": "dhw_temperature", "min": 49, "start_below": 50}})
