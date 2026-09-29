@@ -50,7 +50,10 @@ class PvSurplusBoost:
     start or `latest_end` (local time). It is ended early when `done_key` reaches
     `done_min` (e.g. the tank is hot) or when the house draws more than
     `max_deficit_w` from grid and battery together for `abort_hold_s` (clouds, dusk).
-    A boost is not started if less than `min_duration_s` remain before `latest_end`.
+    A boost is not started if less than `min_duration_s` remain before `latest_end`,
+    nor while `done_key` is at or above `start_below` (if set): some controllers only
+    start heating when the value is clearly below the raised setpoint, e.g. a tank at
+    49 °C does not charge because the minimum is raised to 45 °C.
     """
 
     name: str
@@ -65,6 +68,7 @@ class PvSurplusBoost:
     done_appliance: str | None = None
     done_key: str | None = None
     done_min: float | None = None
+    start_below: float | None = None  # arm only while done_key is below this
     max_deficit_w: float = 500.0
     abort_hold_s: float = 300.0
     max_per_day: int = 1
@@ -101,7 +105,7 @@ class PvSurplusBoost:
         arm = data.get("arm") or {}
         _check_keys(f"{where}, arm", arm, {"min_battery_soc", "min_export_w", "hold_s"})
         done = data.get("done") or {}
-        _check_keys(f"{where}, done", done, {"appliance", "key", "min"})
+        _check_keys(f"{where}, done", done, {"appliance", "key", "min", "start_below"})
         if done and not all(k in done for k in ("appliance", "key", "min")):
             raise ConfigError(f"{where}: done needs appliance, key and min")
         abort = data.get("abort") or {}
@@ -125,11 +129,15 @@ class PvSurplusBoost:
             done_appliance=str(done["appliance"]) if done else None,
             done_key=str(done["key"]) if done else None,
             done_min=float(done["min"]) if done else None,
+            start_below=float(done["start_below"]) if done.get("start_below") is not None else None,
             max_deficit_w=float(abort.get("max_deficit_w", 500)),
             abort_hold_s=float(abort.get("hold_s", 300)),
             max_per_day=int(data.get("max_per_day", 1)),
             enabled=bool(data.get("enabled", True)),
         )
+        if reflex.start_below is not None and reflex.done_min is not None \
+                and reflex.start_below > reflex.done_min:
+            raise ConfigError(f"{where}: done.start_below must not be above done.min")
         if not 0 < reflex.min_duration_s <= reflex.max_duration_s:
             raise ConfigError(f"{where}: need 0 < boost.min_duration_s <= boost.max_duration_s")
         if reflex.max_per_day < 1:
