@@ -7,6 +7,7 @@ import asyncio
 import json
 import logging
 import os
+import signal
 import sys
 
 from . import __version__
@@ -47,7 +48,19 @@ async def _run(config, token, dry_run, once) -> None:
         runner = Runner(config, client, dry_run=dry_run)
         if once:
             print(json.dumps(await runner.tick(), indent=2, ensure_ascii=False))
-        else:
+            return
+        # SIGTERM (launchd, kill) and SIGINT end the loop; then our overrides are released.
+        task = asyncio.current_task()
+        loop = asyncio.get_running_loop()
+        for sig in (signal.SIGTERM, signal.SIGINT):
+            loop.add_signal_handler(sig, task.cancel)
+        try:
             await runner.run()
+        except asyncio.CancelledError:
+            pass
+        finally:
+            for sig in (signal.SIGTERM, signal.SIGINT):
+                loop.remove_signal_handler(sig)
+            await asyncio.wait_for(runner.shutdown(), timeout=15)  # launchd kills after 20 s
     finally:
         await client.close()

@@ -113,6 +113,7 @@ and adjust names and thresholds:
 | `dry_run` | `true` | Only log what would be done; `--live` or `false` to act |
 | `state_file` | `~/.local/state/housereflexes/state.json` | Boosts per day |
 | `owner_prefix` | `housereflexes` | Owner shown in housevitals: `<prefix>/<reflex name>` |
+| `release_on_stop` | `true` | When housereflexes stops (SIGTERM from launchd, Ctrl-C), end every override it holds, so the registers return to their previous values instead of staying until the override's end time |
 
 Per reflex (`type: pv_surplus_boost`):
 

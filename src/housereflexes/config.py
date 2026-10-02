@@ -158,6 +158,8 @@ class Config:
     dry_run: bool = True
     owner_prefix: str = "housereflexes"
     state_file: str = "~/.local/state/housereflexes/state.json"
+    # End this service's overrides when it stops, so no override outlives it.
+    release_on_stop: bool = True
     reflexes: list[PvSurplusBoost] = field(default_factory=list)
 
     @property
@@ -183,7 +185,7 @@ class Config:
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Config:
         _check_keys("Config", data, {"housevitals", "timezone", "interval_s", "status_interval_s", "dry_run",
-                                     "owner_prefix", "state_file", "reflexes"})
+                                     "owner_prefix", "state_file", "release_on_stop", "reflexes"})
         hv = data.get("housevitals") or {}
         _check_keys("housevitals", hv, {"url", "token_file"})
         reflexes = []
@@ -208,6 +210,7 @@ class Config:
             dry_run=bool(data.get("dry_run", True)),
             owner_prefix=str(data.get("owner_prefix", cls.owner_prefix)),
             state_file=str(data.get("state_file", cls.state_file)),
+            release_on_stop=bool(data.get("release_on_stop", True)),
             reflexes=reflexes,
         )
         try:
