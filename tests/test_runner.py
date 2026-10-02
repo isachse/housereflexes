@@ -172,3 +172,37 @@ async def test_status_lines_on_quiet_days(tmp_path, caplog):
     assert "battery_power" in [k for k in report] and report["battery_power"] == 0
     assert report["why"].startswith("idle:")
     await client.close()
+
+
+async def test_stopping_releases_own_overrides(tmp_path):
+    fake, clock = FakeHousevitals(), Clock()
+    runner, client = _runner(tmp_path, fake, clock=clock)
+    await runner.tick()
+    clock.advance(10)
+    assert (await runner.tick())[0]["phase"] == "boosting" and fake.overrides
+    fake.overrides.append({"appliance": "heatpump", "key": "other", "owner": "manual/test"})
+    ended = await runner.shutdown()
+    assert ended == ["heatpump/dhw_setpoint_min"]
+    assert ("DELETE", "/api/v1/appliances/heatpump/overrides/dhw_setpoint_min") in fake.calls
+    assert not any(c == ("DELETE", "/api/v1/appliances/heatpump/overrides/other") for c in fake.calls)
+    assert runner.states["dhw_pv_boost"].phase == "done"
+    await client.close()
+
+
+async def test_release_on_stop_off_and_dry_run_write_nothing(tmp_path):
+    fake = FakeHousevitals()
+    fake.overrides = [{"appliance": "heatpump", "key": "dhw_setpoint_min", "owner": "housereflexes/dhw_pv_boost"}]
+    runner, client = _runner(tmp_path, fake, dry_run=True)
+    assert await runner.shutdown() == []
+    runner.dry_run, runner.config.release_on_stop = False, False
+    assert await runner.shutdown() == []
+    assert not any(m == "DELETE" for m, _ in fake.calls)
+    await client.close()
+
+
+async def test_stopping_while_housevitals_is_down(tmp_path):
+    fake = FakeHousevitals()
+    runner, client = _runner(tmp_path, fake)
+    fake.down = True
+    assert await runner.shutdown() == []  # overrides end on their own at their end time
+    await client.close()

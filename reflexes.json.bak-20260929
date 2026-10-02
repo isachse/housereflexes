@@ -6,9 +6,8 @@
   "timezone": "Europe/Berlin",
   "interval_s": 60,
   "status_interval_s": 1800,
-  "dry_run": true,
+  "dry_run": false,
   "state_file": "~/.local/state/housereflexes/state.json",
-  "release_on_stop": true,
   "reflexes": [
     {
       "name": "dhw_pv_boost",

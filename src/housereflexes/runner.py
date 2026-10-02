@@ -89,6 +89,36 @@ class Runner:
         self._save()
         return report
 
+    async def shutdown(self) -> list[str]:
+        """End every override this service holds (owner prefix), so the registers return
+        to their previous values when housereflexes stops. Returns the ended overrides."""
+        if self.dry_run or not self.config.release_on_stop:
+            return []
+        prefix = f"{self.config.owner_prefix}/"
+        try:
+            leases = await self.client.overrides()
+        except HousevitalsError as err:
+            _LOGGER.warning("Stopping: cannot list overrides, they end on their own: %s", err)
+            return []
+        ended = []
+        for lease in leases:
+            if not str(lease.get("owner", "")).startswith(prefix):
+                continue
+            name = f"{lease['appliance']}/{lease['key']}"
+            try:
+                await self.client.delete_override(lease["appliance"], lease["key"], lease["owner"])
+                ended.append(name)
+            except HousevitalsError as err:
+                if err.status != 404:
+                    _LOGGER.warning("Stopping: ending %s failed, it ends on its own: %s", name, err)
+        for reflex in self.reflexes:  # nothing is boosting any more
+            state = self.states[reflex.name]
+            if state.phase == BOOSTING:
+                state.phase = DONE
+        self._save()
+        _LOGGER.info("Stopping: ended %s", ", ".join(ended) or "no overrides")
+        return ended
+
     def _status(self, name: str, ts: float, why: str) -> None:
         """A status line every status_interval_s, so quiet days leave a trace."""
         interval = self.config.status_interval_s
